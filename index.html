@@ -1,59 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HubRewards - The Hub of Rewards</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Google Fonts for Neon -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
-
   <style>
     body {
       margin: 0;
       font-family: 'Orbitron', sans-serif;
-      background: #0f0f0f;
+      background: url('https://i.imgur.com/G2Xd9Um.jpg') no-repeat center center fixed;
+      background-size: cover;
       color: #39ff14;
       text-align: center;
     }
+
     h1 {
-      color: #39ff14;
-      font-size: 2em;
       margin-top: 20px;
+      font-size: 2rem;
+      text-shadow: 0 0 10px #000;
     }
-    .neon-box {
-      border: 2px solid #39ff14;
-      border-radius: 15px;
-      padding: 20px;
+
+    .container {
       margin: 20px auto;
-      width: 90%;
+      padding: 20px;
       max-width: 500px;
-      box-shadow: 0 0 10px #39ff14;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 20px;
+      box-shadow: 0 0 15px #39ff14;
     }
-    button {
-      background: transparent;
-      border: 2px solid #39ff14;
+
+    .neon-btn {
+      font-size: 1.5em;
+      padding: 20px 40px;
+      margin: 15px 0;
+      background: #000;
+      border: 3px solid #39ff14;
       color: #39ff14;
-      font-size: 1.2em;
-      padding: 10px 20px;
-      margin: 10px;
-      border-radius: 10px;
+      border-radius: 15px;
       cursor: pointer;
+      transition: 0.2s;
     }
-    button:hover {
-      background: #39ff14;
-      color: black;
+
+    .neon-btn:hover {
+      background-color: #39ff14;
+      color: #000;
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #39ff14;
+    }
+
+    .stats {
+      font-size: 1.1em;
+      margin: 10px 0;
+    }
+
+    #click-button:active {
+      animation: pulse 0.2s;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
     }
   </style>
 </head>
 <body>
 
-  <!-- Login Section -->
   <div id="login-area">
-    <h1>🎮 Welcome to HubRewards</h1>
-    <p>Login with Telegram to start earning coins!</p>
-
-    <!-- Telegram Login Button -->
+    <h1>🎁 Welcome to HubRewards</h1>
+    <p>Login with Telegram to earn coins!</p>
     <script async src="https://telegram.org/js/telegram-widget.js?22"
       data-telegram-login="HubRewardsBot"
       data-size="large"
@@ -63,91 +79,107 @@
     </script>
   </div>
 
-  <!-- Game Section (hidden until login) -->
-  <div id="game-area" style="display: none;">
+  <div id="game-area" style="display:none;">
+    <h1>HubRewards 🪙</h1>
 
-    <h1>HubRewards - The Hub of Rewards 💰</h1>
+    <div class="container">
+      <div id="user-info" class="stats">👤 Welcome, <span id="user-name">...</span></div>
 
-    <div class="neon-box">
-      <h2>👤 Profile</h2>
-      <p id="user-name">User: Loading...</p>
+      <div class="stats">🖱️ Clicks Left: <span id="clicks">0</span></div>
+      <div class="stats">💰 Coins: <span id="coins">0</span></div>
+      <div class="stats">📅 Today's Income: <span id="today-income">0</span> coins</div>
+      <div class="stats">📊 Total Income: <span id="total-income">0</span> coins</div>
+      <div class="stats">💸 INR Value: ₹<span id="inr">0.00</span></div>
+
+      <button class="neon-btn" id="click-button" onclick="clickReward()">🔥 Click Me</button>
+
+      <hr>
+
+      <button class="neon-btn" onclick="dailyClaim()">🎁 Daily Claim (+30)</button>
+      <button class="neon-btn" onclick="joinBonus()">🎉 Joining Bonus (+100)</button>
+      <button class="neon-btn" onclick="inviteBonus()">👥 Invite Bonus (+100)</button>
+      <button class="neon-btn" onclick="watchAds()">📺 Watch Ad (+30)</button>
     </div>
-
-    <div class="neon-box">
-      <h2>💸 Income</h2>
-      <p>Today's Income: <span id="today-income">0 coins</span></p>
-      <p>Total Income: <span id="total-income">0 coins</span></p>
-    </div>
-
-    <div class="neon-box">
-      <h2>🎯 Actions</h2>
-      <button onclick="claimClick()">🎁 Claim Free 100 Clicks</button>
-      <button onclick="watchAd()">📺 Watch Ad for 30 Clicks</button>
-      <button onclick="inviteFriend()">👥 Invite Friend for 200 Clicks</button>
-    </div>
-
-    <div class="neon-box">
-      <h2>🏆 Leaderboard</h2>
-      <p>Coming soon...</p>
-    </div>
-
-    <div class="neon-box">
-      <h2>💳 Withdraw</h2>
-      <p>Minimum: ₹100 (30 coins = ₹0.05)</p>
-      <button onclick="requestWithdraw()">Withdraw</button>
-    </div>
-
   </div>
 
   <script>
-    // This function is called when user logs in with Telegram
-    function onTelegramAuth(user) {
-      localStorage.setItem("tg_user", JSON.stringify(user));
-      document.getElementById("user-name").innerText = "User: " + user.first_name;
+    let user = null;
+    let clicks = 0;
+    let coins = 0;
+    let todayIncome = 0;
+    let totalIncome = 0;
+
+    function onTelegramAuth(tgUser) {
+      user = tgUser;
+      document.getElementById("user-name").innerText = tgUser.first_name;
       document.getElementById("login-area").style.display = "none";
       document.getElementById("game-area").style.display = "block";
 
-      // Load coins (from localStorage or backend)
-      const today = localStorage.getItem("today_income") || 0;
-      const total = localStorage.getItem("total_income") || 0;
-      document.getElementById("today-income").innerText = `${today} coins`;
-      document.getElementById("total-income").innerText = `${total} coins`;
+      // Load user data from localStorage (simulating backend for now)
+      const saved = JSON.parse(localStorage.getItem("hub_user_" + user.id)) || {};
+      clicks = saved.clicks || 0;
+      coins = saved.coins || 0;
+      todayIncome = saved.todayIncome || 0;
+      totalIncome = saved.totalIncome || 0;
+      updateUI();
     }
 
-    function claimClick() {
-      addCoins(100);
-      alert("🎉 You've claimed 100 free clicks!");
+    function updateUI() {
+      document.getElementById("clicks").innerText = clicks;
+      document.getElementById("coins").innerText = coins;
+      document.getElementById("today-income").innerText = todayIncome;
+      document.getElementById("total-income").innerText = totalIncome;
+      document.getElementById("inr").innerText = (coins * 0.09 / 30).toFixed(2);
     }
 
-    function watchAd() {
-      addCoins(30);
-      alert("Thanks for watching! You earned 30 coins.");
+    function saveData() {
+      if (!user) return;
+      const data = {
+        clicks,
+        coins,
+        todayIncome,
+        totalIncome
+      };
+      localStorage.setItem("hub_user_" + user.id, JSON.stringify(data));
     }
 
-    function inviteFriend() {
-      addCoins(200);
-      alert("🎉 Invite bonus: +200 coins");
+    function addClicks(amount) {
+      clicks += amount;
+      updateUI();
+      saveData();
     }
 
-    function requestWithdraw() {
-      const total = parseInt(localStorage.getItem("total_income") || 0);
-      const rupees = total * (0.05 / 30);
-      if (rupees >= 100) {
-        alert("✅ Withdrawal request sent!");
-      } else {
-        alert("❌ Minimum ₹100 required to withdraw. You have ₹" + rupees.toFixed(2));
+    function clickReward() {
+      if (clicks <= 0) {
+        alert("Out of clicks! Claim more.");
+        return;
       }
+      clicks--;
+      coins++;
+      todayIncome++;
+      totalIncome++;
+      updateUI();
+      saveData();
     }
 
-    function addCoins(amount) {
-      let today = parseInt(localStorage.getItem("today_income") || 0);
-      let total = parseInt(localStorage.getItem("total_income") || 0);
-      today += amount;
-      total += amount;
-      localStorage.setItem("today_income", today);
-      localStorage.setItem("total_income", total);
-      document.getElementById("today-income").innerText = `${today} coins`;
-      document.getElementById("total-income").innerText = `${total} coins`;
+    function dailyClaim() {
+      addClicks(30);
+      alert("🎁 You've claimed 30 daily clicks!");
+    }
+
+    function joinBonus() {
+      addClicks(100);
+      alert("🎉 Joining bonus added!");
+    }
+
+    function inviteBonus() {
+      addClicks(100);
+      alert("👥 Invite bonus added!");
+    }
+
+    function watchAds() {
+      addClicks(30);
+      alert("📺 You earned 30 clicks from ad!");
     }
   </script>
 </body>
