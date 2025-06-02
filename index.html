@@ -79,6 +79,37 @@
   </style>
 </head>
 <body>
+  <!-- LOGIN AREA -->
+<div id="login-area" style="text-align: center; margin-top: 40px;">
+  <h2>🎉 Welcome to HubRewards</h2>
+  <p>Login with Telegram to start earning rewards!</p>
+
+  <!-- Telegram Login Button -->
+  <script async src="https://telegram.org/js/telegram-widget.js?22"
+          data-telegram-login="HubRewardsBot"  <!-- your bot username (no @) -->
+          data-size="large"
+          data-userpic="true"
+          data-request-access="write"
+          data-onauth="onTelegramAuth(user)">
+  </script>
+</div>
+
+<!-- GAME AREA (initially hidden) -->
+<div id="game-area" style="display: none; text-align: center;">
+  <h2>✅ Logged in! Welcome to the game.</h2>
+  <!-- Add your game content here -->
+</div>
+
+<script>
+  function onTelegramAuth(user) {
+    console.log("Authenticated:", user);
+    localStorage.setItem("tg_user", JSON.stringify(user));
+    
+    // Show game, hide login
+    document.getElementById("game-area").style.display = "block";
+    document.getElementById("login-area").style.display = "none";
+  }
+</script>
   <h1>HubRewards</h1>
   <h2>The Hub of Rewards</h2>  <div id="score">Coins Left: 0</div>
   <button id="clickButton">Click Me!</button>  <div class="panel">
